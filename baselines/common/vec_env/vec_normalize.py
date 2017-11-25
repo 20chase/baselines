@@ -57,6 +57,45 @@ class VecNormalize(VecEnv):
         return self.venv.num_envs
 
 
+class VecNormalizeTest(VecEnv):
+    def __init__(self, venv, mean, var, clipob=10., epsilon=1e-8):
+        self.venv = venv
+        self._observation_space = self.venv.observation_space
+        self._action_space = venv.action_space
+
+        self.mean = mean
+        self.var = var
+        self.clipob = clipob
+        self.epsilon = epsilon
+
+    def render(self):
+        return self.venv.render()
+
+    def step(self, vac):
+        obs, rews, dones, infos = self.venv.step(vac)
+        obs = self._obfilt(obs)
+        return obs, rews, dones, infos
+
+    def _obfilt(self, obs):
+        obs = np.clip((obs - self.mean) / np.sqrt(self.var + self.epsilon), -self.clipob, self.clipob)
+        return obs
+
+    def reset(self):
+        obs = self.venv.reset()
+        return self._obfilt(obs)
+
+    @property
+    def action_space(self):
+        return self._action_space
+    @property
+    def observation_space(self):
+        return self._observation_space
+    def close(self):
+        self.venv.close()
+    @property
+    def num_envs(self):
+        return self.venv.num_envs
+    
 
 class RunningMeanStd(object):
     # https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm

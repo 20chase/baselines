@@ -153,7 +153,7 @@ def constfn(val):
 def learn(*, policy, env, nsteps, total_timesteps, ent_coef, lr, 
             vf_coef=0.5,  max_grad_norm=0.5, gamma=0.99, lam=0.95, 
             log_interval=10, nminibatches=4, noptepochs=4, cliprange=0.2,
-            save_interval=0):
+            save_interval=50):
 
     if isinstance(lr, float): lr = constfn(lr)
     else: assert callable(lr)
@@ -238,6 +238,49 @@ def learn(*, policy, env, nsteps, total_timesteps, ent_coef, lr,
             savepath = osp.join(checkdir, '%.5i'%update)
             print('Saving to', savepath)
             model.save(savepath)
+            # print ('runner.mean: {}'.format(runner.env.ob_rms.mean))
+            np.save('{}/mean'.format(logger.get_dir()), runner.env.ob_rms.mean)
+            # print ('runner.var: {}'.format(runner.env.ob_rms.var))
+            np.save('{}/var'.format(logger.get_dir()), runner.env.ob_rms.var)
+    env.close()
+
+def test(policy, env, nsteps, nminibatches, load_path):
+    nenvs = env.num_envs
+    ob_space = env.observation_space
+    ac_space = env.action_space
+    nbatch = nenvs * nsteps
+    nbatch_train = nbatch // nminibatches
+
+    sess = tf.get_default_session()
+    act_model = policy(sess, ob_space, ac_space, 1, 1, reuse=False)
+    train_model = policy(sess, ob_space, ac_space, nbatch_train, nsteps, reuse=True)
+    params = tf.trainable_variables()
+
+    def load(load_path):
+            loaded_params = joblib.load(load_path)
+            restores = []
+            for p, loaded_p in zip(params, loaded_params):
+                restores.append(p.assign(loaded_p))
+            sess.run(restores)
+
+    load(load_path)
+
+    def run_episode(env, agent):
+        obs = env.reset()
+        score = 0
+        done = [False]
+        while not done[0]:
+            env.render()
+            act = agent.mean(obs)
+            obs, rew, done, info = env.step(act)
+            score += rew[0]
+
+        return score
+
+    for e in range(10000):
+        score = run_episode(env, act_model)
+        print ('episode: {} | score: {}'.format(e, score))
+
     env.close()
 
 def safemean(xs):

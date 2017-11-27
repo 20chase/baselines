@@ -4,7 +4,7 @@ import os, sys
 import numpy as np
 from baselines import bench, logger
 
-def train(env_id, num_timesteps, seed, d_targ):
+def train(env_id, num_timesteps, seed, d_targ, load, point):
     from baselines.common import set_global_seeds
     from baselines.common.vec_env.vec_normalize import VecNormalize
     from baselines.ppo2 import ppo2
@@ -45,12 +45,14 @@ def train(env_id, num_timesteps, seed, d_targ):
         return lr
 
 
-    ppo2.learn(policy=policy, env=env, nsteps=512, nminibatches=4,
+    ppo2.learn(policy=policy, env=env, nsteps=512, nminibatches=16,
         lam=0.95, gamma=0.99, noptepochs=15, log_interval=1,
         ent_coef=0.0,
         lr=adaptive_lr,
         cliprange=0.2,
-        total_timesteps=num_timesteps)
+        total_timesteps=num_timesteps,
+        load=load,
+        point=point)
 
 def test(env_id, num_timesteps, seed, curr_path, point):
     from baselines.common import set_global_seeds
@@ -85,18 +87,19 @@ def test(env_id, num_timesteps, seed, curr_path, point):
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--env', help='environment ID', default='RoboschoolHumanoid-v1')
+    parser.add_argument('--env', help='environment ID', default='RoboschoolHumanoidFlagrunHarder-v1')
     parser.add_argument('--seed', help='RNG seed', type=int, default=0)
-    parser.add_argument('--num-timesteps', type=int, default=int(100e6))
+    parser.add_argument('--num-timesteps', type=int, default=int(200e6))
     parser.add_argument('--train', type=bool, default=True)
+    parser.add_argument('--load', type=bool, default=True)
     parser.add_argument('--d_targ', type=float, default=0.01)
-    parser.add_argument('--point', type=str, default='00150')
+    parser.add_argument('--point', type=str, default='06100')
     args = parser.parse_args()
     curr_path = sys.path[0]
     logger.configure(dir='{}/log'.format(curr_path))
     if args.train:
         train(args.env, num_timesteps=args.num_timesteps, seed=args.seed,
-            d_targ=args.d_targ)
+            d_targ=args.d_targ, load=args.load, point=point)
     else:
         test(args.env, num_timesteps=args.num_timesteps, seed=args.seed,
             curr_path=curr_path, point=args.point)

@@ -85,7 +85,7 @@ class Model(object):
 
 class Runner(object):
 
-    def __init__(self, *, env, model, nsteps, gamma, lam):
+    def __init__(self, *, env, model, nsteps, gamma, lam, load, point):
         self.env = env
         self.model = model
         nenv = env.num_envs
@@ -96,6 +96,8 @@ class Runner(object):
         self.nsteps = nsteps
         self.states = model.initial_state
         self.dones = [False for _ in range(nenv)]
+        if load:
+            self.model.load("{}/checkpoints/{}".format(logger.get_dir(), point))
 
     def run(self):
         mb_obs, mb_rewards, mb_actions, mb_values, mb_dones, mb_neglogpacs = [],[],[],[],[],[]
@@ -153,7 +155,7 @@ def constfn(val):
 def learn(*, policy, env, nsteps, total_timesteps, ent_coef, lr, 
             vf_coef=0.5,  max_grad_norm=0.5, gamma=0.99, lam=0.95, 
             log_interval=10, nminibatches=4, noptepochs=4, cliprange=0.2,
-            save_interval=50):
+            save_interval=50, load=False, point='00100'):
 
     if isinstance(lr, float): lr = constfn(lr)
     else: assert callable(lr)
@@ -175,7 +177,7 @@ def learn(*, policy, env, nsteps, total_timesteps, ent_coef, lr,
         with open(osp.join(logger.get_dir(), 'make_model.pkl'), 'wb') as fh:
             fh.write(cloudpickle.dumps(make_model))
     model = make_model()
-    runner = Runner(env=env, model=model, nsteps=nsteps, gamma=gamma, lam=lam)
+    runner = Runner(env=env, model=model, nsteps=nsteps, gamma=gamma, lam=lam, load=load, point=point)
 
     epinfobuf = deque(maxlen=100)
     tfirststart = time.time()

@@ -87,19 +87,19 @@ def test(env_id, num_timesteps, seed, curr_path, point):
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--env', help='environment ID', default='RoboschoolHumanoidFlagrunHarder-v1')
+    parser.add_argument('--env', help='environment ID', default='RoboschoolHumanoidFlagrun-v1')
     parser.add_argument('--seed', help='RNG seed', type=int, default=0)
     parser.add_argument('--num-timesteps', type=int, default=int(200e6))
     parser.add_argument('--train', type=bool, default=True)
-    parser.add_argument('--load', type=bool, default=True)
+    parser.add_argument('--load', type=bool, default=False)
     parser.add_argument('--d_targ', type=float, default=0.01)
-    parser.add_argument('--point', type=str, default='06100')
+    parser.add_argument('--point', type=str, default='02100')
     args = parser.parse_args()
     curr_path = sys.path[0]
     logger.configure(dir='{}/log'.format(curr_path))
     if args.train:
         train(args.env, num_timesteps=args.num_timesteps, seed=args.seed,
-            d_targ=args.d_targ, load=args.load, point=point)
+            d_targ=args.d_targ, load=args.load, point=args.point)
     else:
         test(args.env, num_timesteps=args.num_timesteps, seed=args.seed,
             curr_path=curr_path, point=args.point)

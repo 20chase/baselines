@@ -155,7 +155,7 @@ def constfn(val):
 def learn(*, policy, env, nsteps, total_timesteps, ent_coef, lr, 
             vf_coef=0.5,  max_grad_norm=0.5, gamma=0.99, lam=0.95, 
             log_interval=10, nminibatches=4, noptepochs=4, cliprange=0.2,
-            save_interval=50, load=False, point='00100'):
+            save_interval=50, load=False, point='00100', init_targ):
 
     if isinstance(lr, float): lr = constfn(lr)
     else: assert callable(lr)
@@ -191,7 +191,19 @@ def learn(*, policy, env, nsteps, total_timesteps, ent_coef, lr,
         tstart = time.time()
         frac = 1.0 - (update - 1.0) / nupdates
         # lrnow = lr(frac)
-        lrnow = lr(lrnow, kl)
+        curr_step = update*nbatch
+        step_percent = float(curr_step / total_timesteps)
+
+        if step_percent < 0.1:
+            d_targ = init_targ
+        elif step_percent < 0.4:
+            d_targ = init_targ / 2.
+        else:
+            d_targ = init_targ / 4.
+
+        # d_targ = init_targ
+
+        lrnow = lr(lrnow, kl, d_targ)
         cliprangenow = cliprange(frac)
         obs, returns, masks, actions, values, neglogpacs, states, epinfos = runner.run() #pylint: disable=E0632
         epinfobuf.extend(epinfos)
@@ -237,6 +249,7 @@ def learn(*, policy, env, nsteps, total_timesteps, ent_coef, lr,
             logger.logkv('eplenmean', safemean([epinfo['l'] for epinfo in epinfobuf]))
             logger.logkv('time_elapsed', tnow - tfirststart)
             logger.logkv('lr', lrnow)
+            logger.logkv('d_targ', d_targ)
             for (lossval, lossname) in zip(lossvals, model.loss_names):
                 logger.logkv(lossname, lossval)
             logger.dumpkvs()

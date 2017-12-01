@@ -8,7 +8,7 @@ def df_plot(dfs, x, ys, ylim=None, legend_loc='best'):
     if ylim:
         plt.ylim(ylim)
 
-    plt.plot(dfs[x], dfs[ys], linewidth=1, label=ys)
+    plt.plot(dfs[x]/3600, dfs[ys], linewidth=1, label=ys)
     plt.xlabel(x)
     plt.legend(loc=legend_loc)
     plt.show()

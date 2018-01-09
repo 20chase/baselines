@@ -290,9 +290,10 @@ def test(policy, env, nsteps, nminibatches, load_path):
         obs = env.reset()
         score = 0
         done = [False]
+        state = agent.initial_state
         while not done[0]:
             env.render()
-            act = agent.mean(obs)
+            act, state = agent.mean(obs, state, done)
             obs, rew, done, info = env.step(act)
             score += rew[0]
 

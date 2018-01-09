@@ -8,9 +8,9 @@ def train(env_id, num_timesteps, seed, d_targ, load, point):
     from baselines.common import set_global_seeds
     from baselines.common.vec_env.vec_normalize import VecNormalize
     from baselines.ppo2 import ppo2
-    from baselines.ppo2.policies import MlpPolicy
+    from baselines.ppo2.policies import LstmMlpPolicy, MlpPolicy
     import gym
-    import roboschool
+    # import roboschool
     import multiprocessing
     import tensorflow as tf
     from baselines.common.vec_env.subproc_vec_env import SubprocVecEnv
@@ -59,7 +59,7 @@ def test(env_id, num_timesteps, seed, curr_path, point):
     from baselines.common import set_global_seeds
     from baselines.common.vec_env.vec_normalize import VecNormalizeTest
     from baselines.ppo2 import ppo2
-    from baselines.ppo2.policies import MlpPolicy
+    from baselines.ppo2.policies import LstmMlpPolicy
     import gym
     import roboschool
     import tensorflow as tf
@@ -79,7 +79,7 @@ def test(env_id, num_timesteps, seed, curr_path, point):
     env = VecNormalizeTest(env, running_mean, running_var)
 
     set_global_seeds(seed)
-    policy = MlpPolicy
+    policy = LstmMlpPolicy
 
     ppo2.test(policy=policy, env=env, nsteps=2048, nminibatches=32, 
         load_path='{}/log/checkpoints/{}'.format(curr_path, point))
@@ -87,13 +87,13 @@ def test(env_id, num_timesteps, seed, curr_path, point):
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--env', help='environment ID', default='RoboschoolAnt-v1')
+    parser.add_argument('--env', help='environment ID', default='Ant-v1')
     parser.add_argument('--seed', help='RNG seed', type=int, default=100)
     parser.add_argument('--num-timesteps', type=int, default=int(10e6))
     parser.add_argument('--train', type=bool, default=True)
     parser.add_argument('--load', type=bool, default=False)
     parser.add_argument('--d_targ', type=float, default=0.012)
-    parser.add_argument('--point', type=str, default='00600')
+    parser.add_argument('--point', type=str, default='03050')
     args = parser.parse_args()
     curr_path = sys.path[0]
     if args.train:

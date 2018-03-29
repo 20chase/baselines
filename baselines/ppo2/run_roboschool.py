@@ -61,7 +61,7 @@ def test(env_id, num_timesteps, seed, curr_path, point):
     from baselines.ppo2 import ppo2
     from baselines.ppo2.policies import LstmMlpPolicy, MlpPolicy
     import gym
-    import roboschool
+    # import roboschool
     import tensorflow as tf
     from baselines.common.vec_env.dummy_vec_env import DummyVecTestEnv
 
